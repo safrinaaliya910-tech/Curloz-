@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-copper: #B8722D;
+  --color-copper-light: #D89A5C;
+  --color-copper-dark: #8C5522;
+  --color-rose-gold: #C9986A;
+  --color-off-white: #FAF8F5;
+  --color-pure-white: #FFFFFF;
+  --color-charcoal: #1A1712;
+  --color-black: #0D0B08;
+  --font-serif: "Cormorant Garamond", "Playfair Display", serif;
+  --font-sans: "Inter", "Manrope", sans-serif;
+}
+
+@layer base {
+  :root {
+    --copper: #B8722D;
+    --copper-light: #D89A5C;
+    --copper-dark: #8C5522;
+    --rose-gold: #C9986A;
+    --off-white: #FAF8F5;
+    --pure-white: #FFFFFF;
+    --charcoal: #1A1712;
+    --black: #0D0B08;
+    --font-serif: 'Cormorant Garamond', 'Playfair Display', serif;
+    --font-sans: 'Inter', 'Manrope', sans-serif;
+  }
+
+  body {
+    @apply bg-off-white text-charcoal font-sans antialiased overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
