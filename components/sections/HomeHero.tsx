@@ -40,7 +40,7 @@ export default function HomeHero() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F5] via-[#FAF8F5]/95 to-transparent w-full lg:w-[58%] z-0 pointer-events-none" />
 
         {/* Content Foreground (Left Column) */}
-        <div className="container relative z-10 mx-auto px-6 md:px-16 h-full flex flex-col pointer-events-none">
+        <div className="w-full max-w-[1600px] relative z-10 mx-auto px-6 md:px-16 h-full flex flex-col pointer-events-none">
           
           {/* Spacer for fixed Navbar */}
           <div className="h-[80px] md:h-[100px] shrink-0" />
