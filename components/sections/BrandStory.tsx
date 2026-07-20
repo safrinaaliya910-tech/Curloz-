@@ -36,14 +36,14 @@ export default function BrandStory() {
     <section ref={sectionRef} className="py-24 md:py-32 bg-white overflow-hidden">
       <div className="container mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Image Side */}
+         {/* Image Side */}
           <div className="relative h-[600px] w-full overflow-hidden rounded-sm bg-off-white">
-            <div ref={imageRef} className="absolute inset-0 -top-[10%] h-[120%] w-full">
+            <div ref={imageRef} className="absolute inset-0 w-full h-full">
               <Image
                 src="/images/products/curloz-trio-lifestyle.png"
                 alt="CURLOZ Collection"
                 fill
-                style={{ objectFit: 'cover' }}
+                style={{ objectFit: 'contain', objectPosition: 'center' }}
               />
             </div>
           </div>
