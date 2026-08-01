@@ -2,91 +2,113 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 interface InteractiveProductImageProps {
-  image: string;
+  frontImage: string;
+  backImage: string;
   alt: string;
 }
 
-export default function InteractiveProductImage({
-  image,
-  alt,
-}: InteractiveProductImageProps) {
+export default function InteractiveProductImage({ frontImage, backImage, alt }: InteractiveProductImageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Continuous rotation value for spinning the bottle
+  const rotationY = useMotionValue(0);
+  
+  // Physical spring physics so the bottle feels weighty and smooth
+  const rotateYSpring = useSpring(rotationY, { stiffness: 200, damping: 30, mass: 0.8 });
 
-  // Raw pointer position inside the container, -0.5 to 0.5
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Smooth out the motion so it feels physical, not jittery
-  const springConfig = { stiffness: 150, damping: 20, mass: 0.5 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
-
-  // Map pointer position to rotation + a subtle parallax shift
-  const rotateY = useTransform(springX, [-0.5, 0.5], [-22, 22]);
-  const rotateX = useTransform(springY, [-0.5, 0.5], [14, -14]);
-  const translateX = useTransform(springX, [-0.5, 0.5], [-14, 14]);
-  const translateY = useTransform(springY, [-0.5, 0.5], [-8, 8]);
-
-  // Soft moving shadow that follows the tilt, grounding the bottle
-  const shadowX = useTransform(springX, [-0.5, 0.5], [20, -20]);
-  const shadowScale = useTransform(springY, [-0.5, 0.5], [0.9, 1.05]);
+  // Subtle vertical tilt for 3D realism when moving the mouse up and down
+  const tiltX = useMotionValue(0);
+  const tiltXSpring = useSpring(tiltX, { stiffness: 150, damping: 20 });
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
     const py = (e.clientY - rect.top) / rect.height - 0.5;
-    x.set(px);
-    y.set(py);
+    tiltX.set(py * -15); // Tilt up/down slightly
   };
 
   const handlePointerLeave = () => {
-    x.set(0);
-    y.set(0);
+    tiltX.set(0); // Return to level when mouse leaves
+  };
+
+  // Handle the physical drag-to-spin interaction
+  const handlePan = (e: any, info: any) => {
+    // info.delta.x is the distance dragged this frame
+    // 0.6 is the sensitivity multiplier (higher = spins faster)
+    rotationY.set(rotationY.get() + info.delta.x * 0.6);
+  };
+
+  const handlePanEnd = (e: any, info: any) => {
+    const current = rotationY.get();
+    const velocity = info.velocity.x;
+    
+    // Add a bit of velocity to predict where it should land if swiped hard
+    const predicted = current + velocity * 0.1;
+    
+    // Mathematically snap to the nearest 180 degrees (0 = front, 180 = back, 360 = front, etc.)
+    const nearestFace = Math.round(predicted / 180) * 180;
+    
+    // Snap cleanly into place
+    rotationY.set(nearestFace);
   };
 
   return (
-    <div
+    <div 
       ref={containerRef}
+      className="relative w-full h-full flex flex-col items-center justify-center select-none"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      className="relative w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
       style={{ perspective: 1200 }}
     >
-      {/* Grounding shadow */}
-      <motion.div
-        className="absolute bottom-[8%] w-2/3 h-8 rounded-full bg-charcoal/20 blur-xl"
-        style={{ x: shadowX, scaleX: shadowScale }}
-      />
+      {/* Grounding shadow (Static, doesn't spin, sits beneath the bottle) */}
+      <div className="absolute -bottom-[5%] left-[20%] w-[60%] h-[8%] rounded-[50%] z-0 bg-[radial-gradient(ellipse,_rgba(60,45,30,0.25)_0%,_transparent_70%)] blur-[8px]" />
 
-      {/* The real product image, tilted in 3D space based on pointer position */}
+      {/* The Spinning Bottle Container */}
       <motion.div
-        style={{
-          rotateX,
-          rotateY,
-          x: translateX,
-          y: translateY,
-          transformStyle: 'preserve-3d',
+        className="relative w-[65%] h-[75%] z-10 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+        style={{ 
+          rotateX: tiltXSpring, 
+          rotateY: rotateYSpring, 
+          transformStyle: 'preserve-3d' 
         }}
-        whileTap={{ scale: 0.97 }}
-        className="relative w-[70%] h-[80%] will-change-transform"
+        onPan={handlePan}
+        onPanEnd={handlePanEnd}
       >
-        <Image
-          src={image}
-          alt={alt}
-          fill
-          className="object-contain drop-shadow-[0_25px_35px_rgba(60,40,20,0.25)]"
-          sizes="(max-width: 768px) 80vw, 40vw"
-          priority
-        />
+        {/* --- FRONT SIDE --- */}
+        <div 
+          className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none"
+          style={{ backfaceVisibility: 'hidden' }}
+        >
+          <Image
+            src={frontImage}
+            alt={`${alt} Front`}
+            fill
+            className="object-contain drop-shadow-md"
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        </div>
+
+        {/* --- BACK SIDE --- */}
+        <div 
+          className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none"
+          style={{ 
+            backfaceVisibility: 'hidden', 
+            transform: 'rotateY(180deg)' // Pre-flipped so it faces backwards
+          }}
+        >
+          <Image
+            src={backImage}
+            alt={`${alt} Back Details`}
+            fill
+            className="object-contain drop-shadow-md"
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        </div>
       </motion.div>
     </div>
   );
